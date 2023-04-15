@@ -28,7 +28,8 @@ def init() -> int:
 
 
 def save_database_config(host: str, port: str, username: str, password: str) -> int:
-    config["Database"] = {"host": host, "port": port, "username": username, "password": password}
+    config["Database"] = {"host": host, "port": port,
+                          "username": username, "password": password}
     try:
         with CONFIG_FILE_PATH.open("w") as file:
             config.write(file)
@@ -46,7 +47,7 @@ def show_database_config() -> int:
         [bold]password:[/bold] [green]{data['password']}[/green]
           """)
     return SUCCESS
-    
+
 
 def delete_database_config() -> int:
     try:

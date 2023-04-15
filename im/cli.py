@@ -6,7 +6,7 @@ import typer
 from rich import print
 from rich.prompt import Confirm
 
-from im import config, database
+from im import config, database, SUCCESS
 
 app = typer.Typer()
 config_app = typer.Typer()
@@ -22,8 +22,8 @@ def init():
     host = typer.prompt("Host")
     port = typer.prompt("Port")
     username = typer.prompt("Username")
-    password = typer.prompt("Password", hide_input=True, confirmation_prompt=True)
-    
+    password = typer.prompt("Password", hide_input=True,
+                            confirmation_prompt=True)
 
     config.init()
     config.save_database_config(host, port, username, password)
@@ -42,9 +42,11 @@ def delete():
     if not config.CONFIG_FILE_PATH.exists():
         return print("[red]Config file already deleted.[/red]")
 
-    delete = Confirm.ask("Are you sure you want to [red]DELETE[/red] the database config? :skull:")
+    delete = Confirm.ask(
+        "Are you sure you want to [red]DELETE[/red] the database config? :skull:")
     if delete:
-        config.delete_database_config()
+        if database.destroy() == SUCCESS:
+            config.delete_database_config()
     else:
         raise typer.Abort()
 
@@ -52,7 +54,11 @@ def delete():
 @config_app.command()
 def test_connection():
     """Test the database connection."""
-    database._connect()
+    try:
+        database._connect(autoclose=True)
+        print("[green]Connection successful.[/green]")
+    except:
+        print(f"[red]Connection failed.[/red]")
 
 
 @users_app.command(help="Register a user.")
@@ -60,28 +66,30 @@ def add():
     first_name = typer.prompt("First name")
     last_name = typer.prompt("Last name")
     email = typer.prompt("Email")
-    password = typer.prompt("Password", hide_input=True, confirmation_prompt=True)
+    password = typer.prompt("Password", hide_input=True,
+                            confirmation_prompt=True)
 
     database.add_user(first_name, last_name, email, password)
 
 
 @users_app.command(help="Update user data.")
-def update(uuid: str = typer.Option(...,"--id", show_default=False, prompt=True)):
+def update(uuid: str = typer.Option(..., "--id", show_default=False, prompt=True)):
     first_name = typer.prompt("First name")
     last_name = typer.prompt("Last name")
     email = typer.prompt("Email")
-    password = typer.prompt("Password", hide_input=True, confirmation_prompt=True)
+    password = typer.prompt("Password", hide_input=True,
+                            confirmation_prompt=True)
 
     database.update_user(uuid, first_name, last_name, email, password)
 
 
 @users_app.command(help="Delete a user.")
-def delete(uuid: str = typer.Option(...,"--id", show_default=False, prompt=True)):
+def delete(uuid: str = typer.Option(..., "--id", show_default=False, prompt=True)):
     database.delete_user(uuid)
 
 
 @users_app.command(help="Retrieve the data of a specific user.")
-def get(uuid: str = typer.Option(...,"--id", show_default=False, prompt=True)):
+def get(uuid: str = typer.Option(..., "--id", show_default=False, prompt=True)):
     database.get_user(uuid)
 
 
